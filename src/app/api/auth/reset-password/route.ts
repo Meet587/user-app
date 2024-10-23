@@ -1,34 +1,38 @@
 import connectToDB from "@/db/config";
 import User from "@/models/user.model";
+import bcryptjs from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
     const reqBody = await request.json();
-    const { token } = reqBody;
+    const { newPassword, token } = reqBody;
 
     await connectToDB();
+
+    const salt = await bcryptjs.genSalt(10);
+    const hashePassword = await bcryptjs.hash(newPassword, salt);
+
     const user = await User.findOne({
-      verifyToken: token,
-      verifyTokenExpiry: { $gt: Date.now() },
+      forgotPasswordToken: token,
+      forgotPasswordTokenExpiry: { $gt: Date.now() },
     });
 
     if (!user) {
       return NextResponse.json({ error: "Invalid Token" }, { status: 400 });
     }
 
-    user.isVerified = true;
-    user.verifyToken = undefined;
-    user.verifyTokenExpiry = undefined;
+    user.password = hashePassword;
+    user.forgotPasswordToken = undefined;
+    user.forgotPasswordTokenExpiry = undefined;
 
-    await user.save();
+    await user.save()
 
     return NextResponse.json(
-      { massege: "email verified", success: true },
+      { massege: "password change successfully.", success: true },
       { status: 200 }
     );
   } catch (error: any) {
-    console.log(error)
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
