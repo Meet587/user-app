@@ -13,15 +13,21 @@ export async function POST(request: NextRequest) {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return NextResponse.json({ massege: "User not found" }, { status: 404 });
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
     const validatePasswor = await bcryptjs.compare(password, user.password);
 
     if (!validatePasswor) {
       return NextResponse.json(
-        { massege: "Invalid password" },
+        { message: "Invalid password" },
         { status: 400 }
+      );
+    }
+
+    if (user.twoFactorEnabled) {
+      return NextResponse.json(
+        { stratus: 200, success: true, twoFactorRequired: true, userId: user._id }
       );
     }
 
@@ -34,13 +40,12 @@ export async function POST(request: NextRequest) {
     const token = signJWT(userData);
 
     const response = NextResponse.json(
-      { massege: "Login Successfull", success: true, token: token },
-      { status: 200 }
+      { status: 200, message: "Login Successfull", success: true, twoFactorRequired: false, token: token },
     );
 
     return response;
   } catch (error: any) {
     console.log(error)
-    return NextResponse.json({ massege: error.massege }, { status: 500 });
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
