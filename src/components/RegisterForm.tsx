@@ -3,7 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -15,8 +15,11 @@ import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { signIn } from "next-auth/react";
+import GoogleReCaptchaWrapper from "./GoogleReCaptchaWrapper";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { Loader2 } from "lucide-react";
 
-const RegisterForm = () => {
+const RegisterFormContent = () => {
   const router = useRouter();
   const { toast } = useToast();
   const [user, setUser] = useState({
@@ -24,35 +27,59 @@ const RegisterForm = () => {
     password: "",
     name: "",
   });
-  const [btnDisable, setBtnDisable] = useState(false);
-
-  useEffect(() => {
-    if (
-      user.email.length > 0 &&
-      user.password.length > 0 &&
-      user.name.length > 0
-    ) {
-      setBtnDisable(false);
-    } else {
-      setBtnDisable(true);
-    }
-  }, [user]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const onSignup = async (e: React.SyntheticEvent) => {
     e.preventDefault();
+    if (!executeRecaptcha) {
+      console.log("Execute recaptcha not yet available");
+      return;
+    }
+
+    setIsLoading(true);
     try {
+      const token = await executeRecaptcha("register");
+      const recaptchaResponse = await axios.post("/api/verify-recaptcha", {
+        token,
+      });
+
+      if (!recaptchaResponse.data.success) {
+        toast({
+          title: "reCAPTCHA verification failed",
+          description: "Please try again.",
+        });
+        return;
+      }
+
       const response = await axios.post("/api/auth/register", user);
-      console.log("singup success ", response.data);
       toast({
         title: response.data.message,
       });
-      // router.push("/login");
+
+      // Sign in the user after successful registration
+      const result = await signIn("credentials", {
+        email: user.email,
+        password: user.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast({
+          title: "Error",
+          description: result.error,
+        });
+      } else {
+        router.push("/profile");
+      }
     } catch (error: any) {
       console.log(error);
       toast({
         title: "Error While register",
-        description: error.message ?? "",
+        description: error.response?.data?.message ?? error.message ?? "",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -72,6 +99,7 @@ const RegisterForm = () => {
                 value={user.name}
                 onChange={(e) => setUser({ ...user, name: e.target.value })}
                 placeholder="Enter Your Name"
+                disabled={isLoading}
               />
             </div>
             <div className="flex flex-col space-y-1.5">
@@ -82,6 +110,7 @@ const RegisterForm = () => {
                 value={user.email}
                 onChange={(e) => setUser({ ...user, email: e.target.value })}
                 placeholder="Enter your Email"
+                disabled={isLoading}
               />
             </div>
             <div className="flex flex-col space-y-1.5">
@@ -92,21 +121,39 @@ const RegisterForm = () => {
                 value={user.password}
                 onChange={(e) => setUser({ ...user, password: e.target.value })}
                 placeholder="Enter Password"
+                disabled={isLoading}
               />
             </div>
           </div>
 
           <div className="flex justify-center">
-            <Button type="submit" disabled={btnDisable} className="mt-2">
-              Sign up
+            <Button type="submit" disabled={isLoading} className="mt-2">
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing up...
+                </>
+              ) : (
+                "Sign up"
+              )}
             </Button>
           </div>
         </form>
       </CardContent>
-      <CardFooter>
-        <Link href={"/login"}>Click here to Login</Link>
+      <CardFooter className="flex justify-center">
+        <Link className="font-thin p-0 h-auto hover:underline" href={"/login"}>
+          Click here to Login
+        </Link>
       </CardFooter>
     </Card>
+  );
+};
+
+const RegisterForm = () => {
+  return (
+    <GoogleReCaptchaWrapper>
+      <RegisterFormContent />
+    </GoogleReCaptchaWrapper>
   );
 };
 
