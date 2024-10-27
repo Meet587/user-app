@@ -75,7 +75,7 @@ const LoginFormContent = () => {
             if (userRole === "admin") {
               router.push("/dashboard");
             } else {
-              router.push("/profile");
+              router.push("/");
             }
           }
         }
@@ -116,7 +116,7 @@ const LoginFormContent = () => {
   const handleGoogleSignIn = async (): Promise<void> => {
     setIsGoogleSignInLoading(true);
     try {
-      await signIn("google", { callbackUrl: "/profile" });
+      await signIn("google", { callbackUrl: "/" });
     } catch (error) {
       console.log(error);
       toast({

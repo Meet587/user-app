@@ -9,18 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
 
 export default function Dashboard() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
+  const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
-
-  // useEffect(() => {
-  //   console.log(session);
-  //   if (session?.user.twoFactorEnabled) {
-  //     router.push("/setup-2fa");
-  //   }
-  // }, [session,router]);
 
   if (status === "loading") {
     return (
@@ -82,6 +78,34 @@ export default function Dashboard() {
     }
   };
 
+  const toggleGAStatus = async ({ user }: { user: any }) => {
+    try {
+      //   setLoading(true);
+      const response = await fetch("/api/user/toggle-two-factor", {
+        method: "POST",
+        body: JSON.stringify({ userId: user.id }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to toggle two-factor status");
+      }
+
+      const data = await response.json();
+      toast({
+        title: "Status Updated.",
+      });
+      router.refresh();
+      console.log("Toggled twoFactorEnabled:");
+    } catch (error) {
+      console.error("Error toggling two-factor status:", error);
+      toast({
+        title: "error while updating status.",
+      });
+    } finally {
+      //   setLoading(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <Card className="max-w-2xl mx-auto">
@@ -120,7 +144,7 @@ export default function Dashboard() {
           </div>
           <h1 className="text-2xl font-semibold mb-2">{session.user?.name}</h1>
           <p className="text-gray-600 mb-4">{session.user?.email}</p>
-          <div className="flex items-center mb-4">
+          <div className="flex flex-col gap-3 items-center mb-4">
             <Badge
               variant={
                 session.user.twoFactorEnabled ? "default" : "destructive"
@@ -128,6 +152,13 @@ export default function Dashboard() {
             >
               {session.user.twoFactorEnabled ? "2FA Enabled" : "2FA Disabled"}
             </Badge>
+            {/* <Switch
+              id={session.user.id}
+              checked={session.user.twoFactorEnabled as boolean}
+              onCheckedChange={(e) => {
+                toggleGAStatus({ user: session.user });
+              }}
+            /> */}
           </div>
           <p className="text-sm text-gray-500 mb-2">
             User ID: {session.user.id}
@@ -135,9 +166,7 @@ export default function Dashboard() {
 
           {!session.user.twoFactorEnabled && (
             <Button asChild className="mb-4">
-              <Link href="/profile/setup-2fa">
-                Set up Two-Factor Authentication
-              </Link>
+              <Link href="/setup-2fa">Set up Two-Factor Authentication</Link>
             </Button>
           )}
           <Button

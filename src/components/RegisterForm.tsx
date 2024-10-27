@@ -70,7 +70,7 @@ const RegisterFormContent = () => {
           description: result.error,
         });
       } else {
-        router.push("/profile");
+        router.push("/");
       }
     } catch (error: any) {
       console.log(error);
