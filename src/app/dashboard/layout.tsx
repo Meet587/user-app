@@ -25,16 +25,16 @@ export default function AdminLayout({
       </div>
     );
   }
-  // if (session.user.role !== UserRole.admin) {
-  //   return (
-  //     <div className="flex flex-col items-center justify-center h-screen">
-  //       <div className="mb-4">You are not authorized</div>
-  //       <Button asChild>
-  //         <Link href="/login">Go to Login</Link>
-  //       </Button>
-  //     </div>
-  //   );
-  // }
+  if (session.user.role !== UserRole.admin) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="mb-4">You are not authorized</div>
+        <Button asChild>
+          <Link href="/login">Go to Login</Link>
+        </Button>
+      </div>
+    );
+  }
   return (
     <SidebarProvider>
       <AppSidebar />
