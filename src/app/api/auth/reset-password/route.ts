@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "Invalid Token" }, { status: 400 });
+      return NextResponse.json({ message: "Invalid Token" }, { status: 400 });
     }
 
     user.password = hashePassword;
@@ -29,10 +29,11 @@ export async function POST(request: NextRequest) {
     await user.save()
 
     return NextResponse.json(
-      { massege: "password change successfully.", success: true },
+      { message: "password change successfully.", success: true },
       { status: 200 }
     );
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.log(error)
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }

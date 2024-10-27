@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "User with this email not found." },
+        { message: "User with this email not found." },
         { status: 400 }
       );
     }
@@ -23,10 +23,10 @@ export async function POST(request: NextRequest) {
     await verifyEmail({ email, emailType: "RESET", userId: user._id });
 
     return NextResponse.json(
-      { massege: "Email sent for reset password", success: true },
+      { message: "Email sent for reset password", success: true },
       { status: 200 }
     );
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
