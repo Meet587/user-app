@@ -2,8 +2,9 @@ import NextAuth from "next-auth/next";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import connectToDB from "@/db/config";
-import User, { UserRole } from "@/models/user.model";
+import User from "@/models/user.model";
 import bcryptjs from "bcryptjs";
+import { UserRole } from "@/enum/userRole";
 
 const authHandler = NextAuth({
   providers: [
@@ -18,7 +19,6 @@ const authHandler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        console.log("credentials", credentials)
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
@@ -48,7 +48,10 @@ const authHandler = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    async redirect({ url, baseUrl }) {
+      return baseUrl;
+    },
+    async jwt({ token, user }) {
       if (user) {
         try {
           await connectToDB();
@@ -62,6 +65,7 @@ const authHandler = NextAuth({
               imageUrl: user.imageUrl,
               password: hashedPassword,
               twoFactorEnabled: false,
+              twoFactorVerified: false,
               role: UserRole.user
             });
           }
@@ -84,14 +88,13 @@ const authHandler = NextAuth({
           session.user.id = user._id.toString();
           session.user.imageUrl = user.imageUrl;
           session.user.twoFactorEnabled = user.twoFactorEnabled;
-          session.user.twoFactorVerified = user.twoFactorVerified;
+          session.user.twoFactorVerified = user.twoFactorVerified || false;
           session.user.role = user.role;
         }
       }
       return session;
     },
     async signIn({ user, profile }) {
-      console.log(profile, user)
       const userData = profile || user;
       if (!userData || !userData.email) {
         console.log("Invalid user data");
@@ -105,15 +108,11 @@ const authHandler = NextAuth({
           await User.create({
             email: userData.email,
             name: userData.name?.replace(" ", "").toLowerCase() || userData.email?.split('@')[0] || '',
-            //@ts-ignore
+            //@ts-expect-error : should expected imageUrl
             imageUrl: 'image' in userData ? userData.image : (userData as typeof User).imageUrl,
-            twoFactorEnabled: false
+            twoFactorEnabled: false,
+            twoFactorVerified: false
           });
-        }
-
-        const userWith2FA = await User.findOne({ email: userData.email });
-        if (userWith2FA?.twoFactorEnabled) {
-          return true;
         }
 
         return true;

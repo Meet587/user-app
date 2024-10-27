@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
@@ -8,8 +8,10 @@ import { Input } from "./ui/input";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Label } from "./ui/label";
+import { useSession } from "next-auth/react";
 
 const TwoFactorSetupVerify = ({ userId }: { userId: string }) => {
+  const { data: session, update } = useSession();
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [secret, setSecret] = useState<string | null>(null);
   const [token, setToken] = useState("");
@@ -20,7 +22,7 @@ const TwoFactorSetupVerify = ({ userId }: { userId: string }) => {
     setupTwoFactor();
   }, []);
 
-  const setupTwoFactor = async () => {
+  const setupTwoFactor = useCallback(async () => {
     try {
       const response = await axios.post("/api/auth/setup-2fa", { userId });
       if (response.data.status === 200) {
@@ -38,7 +40,7 @@ const TwoFactorSetupVerify = ({ userId }: { userId: string }) => {
         description: "Please try again",
       });
     }
-  };
+  }, []);
 
   const verifyTwoFactor = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +51,11 @@ const TwoFactorSetupVerify = ({ userId }: { userId: string }) => {
       });
       if (response.data.success) {
         toast({ title: "2FA verified successfully" });
-        router.push("/profile");
+        await update({
+          ...session,
+          user: { ...session?.user, twoFactorVerified: true },
+        });
+        router.push("/");
       } else {
         toast({ title: "Invalid 2FA token", description: "Please try again" });
       }

@@ -1,10 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-
-export enum UserRole {
-  user = 'user',
-  admin = 'admin'
-}
+import { UserRole } from "@/enum/userRole";
 
 const UserSchema = new mongoose.Schema(
   {

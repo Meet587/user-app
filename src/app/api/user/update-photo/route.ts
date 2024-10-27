@@ -17,7 +17,6 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
         }
 
-        // we'll just use the file name as the image URL
         const imageUrl = `/uploads/${file.name}`;
 
         await connectToDB();

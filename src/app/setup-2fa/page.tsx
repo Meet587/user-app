@@ -1,11 +1,9 @@
 "use client";
 import { useSession } from "next-auth/react";
-import TwoFactorSetupForm from "@/components/TwoFactorSetupForm";
 import TwoFactorSetupVerify from "@/components/TwoFactorSetupVerify";
 
 const SetupTwoFactorPage = () => {
   const { data: session, status } = useSession();
-  console.log("session.user", session?.user);
   if (status === "loading") {
     return <div>Loading...</div>;
   }

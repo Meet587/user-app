@@ -15,7 +15,7 @@ import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { EMAIL_REGEX } from "@/constant/regEx";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, useSession, getSession } from "next-auth/react";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import GoogleReCaptchaWrapper from "./GoogleReCaptchaWrapper";
 import { Loader2 } from "lucide-react";
@@ -62,21 +62,22 @@ const LoginFormContent = () => {
       });
       if (result?.error) {
         toast({
-          title: "Error",
-          description: result.error,
+          title: "Invalid credentials",
         });
       } else {
-        console.log(session);
-        let userRole = "user";
+        const session = await getSession();
         if (session) {
-          userRole = session.user.role;
-        }
-
-        // Redirect based on user role
-        if (userRole === "admin") {
-          router.push("/dashboard");
-        } else {
-          router.push("/profile");
+          if (session.user.twoFactorEnabled) {
+            router.push("/setup-2fa");
+          } else {
+            // Redirect based on user role
+            let userRole = session.user.role || "user";
+            if (userRole === "admin") {
+              router.push("/dashboard");
+            } else {
+              router.push("/profile");
+            }
+          }
         }
       }
     } catch (error: any) {
