@@ -1,6 +1,8 @@
 "use client";
 import { useSession } from "next-auth/react";
 import TwoFactorSetupVerify from "@/components/TwoFactorSetupVerify";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const SetupTwoFactorPage = () => {
   const { data: session, status } = useSession();
@@ -9,7 +11,14 @@ const SetupTwoFactorPage = () => {
   }
 
   if (!session) {
-    return <div>Please log in to set up 2FA</div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="mb-4">Please log in to set up 2FA</div>
+        <Button asChild>
+          <Link href="/login">Go to Login</Link>
+        </Button>
+      </div>
+    );
   }
 
   return (

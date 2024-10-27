@@ -140,8 +140,24 @@ export default function Dashboard() {
               </Link>
             </Button>
           )}
-          <Button variant="destructive" onClick={handleSignOut}>
+          <Button
+            variant="destructive"
+            className="my-2"
+            onClick={handleSignOut}
+          >
             Sign out
+          </Button>
+          {session.user.twoFactorEnabled && (
+            <Button asChild className="mb-4">
+              <Link className="font-thin" href="/setup-2fa">
+                Set up Two-Factor Authentication
+              </Link>
+            </Button>
+          )}
+          <Button asChild className="mb-4">
+            <Link className="font-thin" href="/dashboard">
+              Go to Dashboard
+            </Link>
           </Button>
         </CardContent>
       </Card>
