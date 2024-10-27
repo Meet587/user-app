@@ -2,7 +2,7 @@ import NextAuth from "next-auth/next";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import connectToDB from "@/db/config";
-import User from "@/models/user.model";
+import User, { UserRole } from "@/models/user.model";
 import bcryptjs from "bcryptjs";
 
 const authHandler = NextAuth({
@@ -18,6 +18,7 @@ const authHandler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
+        console.log("credentials", credentials)
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
@@ -38,8 +39,10 @@ const authHandler = NextAuth({
         return {
           id: user._id.toString(),
           email: user.email,
-          // name: user.name,
-          image: user.image,
+          name: user.name,
+          imageUrl: user.imageUrl,
+          twoFactorEnabled: false,
+          role: UserRole.user
         };
       }
     }),
@@ -56,57 +59,60 @@ const authHandler = NextAuth({
             dbUser = await User.create({
               email: user.email,
               name: user.name,
-              image: user.image,
+              imageUrl: user.imageUrl,
               password: hashedPassword,
-              twoFactorEnabled: false
+              twoFactorEnabled: false,
+              role: UserRole.user
             });
           }
           token.id = dbUser._id.toString();
           token.twoFactorEnabled = dbUser.twoFactorEnabled;
+          token.imageUrl = dbUser.imageUrl;
+          token.role = dbUser.role;
         } catch (error) {
           console.error("Error in jwt callback:", error);
         }
       }
-      // console.log("dbUser in token", token)
       return token;
     },
 
-    async session({ session }) {
-      // Connect to DB and find the user
-      await connectToDB();
-      if (!session.user?.email) throw new Error("User email not found in session");
-      const sessionUser = await User.findOne({ email: session.user.email });
-
-      if (!sessionUser) throw new Error("User not found");
-
-      session.user.id = sessionUser._id.toString();
-      session.user.twoFactorEnabled = sessionUser.twoFactorEnabled;
-      session.user.twoFactorVerified = sessionUser.twoFactorVerified;
-
+    async session({ session, token }) {
+      if (session.user) {
+        await connectToDB();
+        const user = await User.findOne({ email: session.user.email });
+        if (user) {
+          session.user.id = user._id.toString();
+          session.user.imageUrl = user.imageUrl;
+          session.user.twoFactorEnabled = user.twoFactorEnabled;
+          session.user.twoFactorVerified = user.twoFactorVerified;
+          session.user.role = user.role;
+        }
+      }
       return session;
     },
     async signIn({ user, profile }) {
-      if (!profile || !profile.email) {
-        console.log("Invalid profile data");
+      console.log(profile, user)
+      const userData = profile || user;
+      if (!userData || !userData.email) {
+        console.log("Invalid user data");
         return false;
       }
       try {
         await connectToDB();
-        const existingUser = await User.findOne({ email: profile.email });
+        const existingUser = await User.findOne({ email: userData.email });
 
         if (!existingUser) {
           await User.create({
-            email: profile.email,
-            name: profile.name?.replace(" ", "").toLowerCase() || profile.email?.split('@')[0] || '',
-            image: profile.image,
-            twoFactorEnabled: true
+            email: userData.email,
+            name: userData.name?.replace(" ", "").toLowerCase() || userData.email?.split('@')[0] || '',
+            //@ts-ignore
+            imageUrl: 'image' in userData ? userData.image : (userData as typeof User).imageUrl,
+            twoFactorEnabled: false
           });
         }
 
-        const userWith2FA = await User.findOne({ email: profile.email });
+        const userWith2FA = await User.findOne({ email: userData.email });
         if (userWith2FA?.twoFactorEnabled) {
-          // Require 2FA if enabled
-          // return `/twofactor-authenticate?userId=${userWith2FA._id}`;
           return true;
         }
 
@@ -119,7 +125,6 @@ const authHandler = NextAuth({
   },
   pages: {
     signIn: "/login",
-    // newUser: "/register",
   },
 });
 

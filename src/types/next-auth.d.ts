@@ -1,3 +1,4 @@
+import { UserRole } from "@/models/user.model";
 import { Types } from "mongoose";
 import { DefaultSession } from "next-auth";
 declare module 'next' {
@@ -10,9 +11,16 @@ declare module 'next' {
 }
 
 declare module "next-auth" {
+    interface User {
+        imageUrl?: string;
+        twoFactorEnabled?: boolean;
+        twoFactorVerified?: boolean;
+    }
     interface Session extends DefaultSession {
         user: {
             id: string;
+            role: UserRole;
+            imageUrl: string;
             twoFactorEnabled: boolean;
             twoFactorVerified: boolean;
         } & DefaultSession["user"]
@@ -22,6 +30,7 @@ declare module "next-auth" {
 // declare module "JWT" {
 //     interface JWT {
 //         user: {
+//             imageUrl: string;
 //             twoFactorEnabled: boolean;
 //             twoFactorVerified: boolean;
 //         }

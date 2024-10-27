@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
+export enum UserRole {
+  user = 'user',
+  admin = 'admin'
+}
+
 const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: false },
@@ -13,6 +18,8 @@ const UserSchema = new mongoose.Schema(
     forgotPasswordTokenExpiry: Date,
     twoFactorSecret: { type: String },
     twoFactorEnabled: { type: Boolean, default: false },
+    imageUrl: { type: String, default: "" },
+    role: { type: String, enum: UserRole, default: "user" },
   },
 
   { timestamps: true }

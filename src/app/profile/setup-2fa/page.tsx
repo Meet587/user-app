@@ -1,6 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import TwoFactorSetupForm from "@/components/TwoFactorSetupForm";
+import TwoFactorSetupVerify from "@/components/TwoFactorSetupVerify";
 
 const SetupTwoFactorPage = () => {
   const { data: session, status } = useSession();
@@ -16,7 +17,7 @@ const SetupTwoFactorPage = () => {
   return (
     <div>
       <h1>Set Up Two-Factor Authentication</h1>
-      <TwoFactorSetupForm userId={session.user.id} />
+      <TwoFactorSetupVerify userId={session.user.id} />
     </div>
   );
 };
