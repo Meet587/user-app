@@ -61,6 +61,27 @@ export default function Home() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    if (
+      !["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(
+        file.type
+      )
+    ) {
+      toast({
+        title: "Please upload an image file (JPEG, PNG, or WebP)",
+      });
+      event.target.value = "";
+      return;
+    }
+
+    // File size validation
+    if (file.size > 4 * 1024 * 1024) {
+      toast({
+        title: "File size must be less than 4MB",
+      });
+      event.target.value = "";
+      return;
+    }
+
     setIsUploading(true);
 
     const formData = new FormData();
