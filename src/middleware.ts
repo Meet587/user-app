@@ -5,8 +5,8 @@ import { signOut } from 'next-auth/react';
 export async function middleware(req: NextRequest) {
     const token = await getToken({ req });
     const { pathname } = req.nextUrl;
-    
-    const publicRoutes = ['/login', '/register'];
+
+    const publicRoutes = ['/login', '/register', '/reset-password', '/verifyemail'];
 
     // Check if the user is authenticated
     const isAuthenticated = !!token;
