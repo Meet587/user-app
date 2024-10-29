@@ -91,6 +91,7 @@ const Dashboard = () => {
           </AlertDialogContent>
         </AlertDialog>
       ),
+      enableSorting: false,
     },
   ];
 
@@ -173,7 +174,6 @@ const Dashboard = () => {
       ) : (
         <>
           <DataTable columns={columns} data={users} />
-          {/* <UserTable users={users} fetchUsers={fetchUsers} /> */}
         </>
       )}
     </div>
