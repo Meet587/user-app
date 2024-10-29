@@ -93,8 +93,13 @@ const LoginForm = () => {
             </div>
           </form>
         </CardContent>
-        <CardFooter>
-          <Link href={"/login"}>Back To Login</Link>
+        <CardFooter className="flex flex-col">
+          <Link
+            className="font-thin p-0 h-auto hover:underline"
+            href={"/login"}
+          >
+            Back To Login
+          </Link>
         </CardFooter>
       </Card>
     </div>
