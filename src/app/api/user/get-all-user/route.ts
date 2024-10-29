@@ -6,7 +6,7 @@ export async function GET() {
     await connectToDB();
 
     try {
-        const users = await User.find({});
+        const users = await User.find({}).select('_id name email twoFactorEnabled createdAt');
         return NextResponse.json(users, { status: 200 });
     } catch (error) {
         return NextResponse.json({ message: 'Failed to retrieve users' }, { status: 500 });
