@@ -66,7 +66,7 @@ const TwoFactorSetupVerify = ({ userId }: { userId: string }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center">
+    <div className="flex flex-col justify-center items-center">
       <h1>Setup 2FA</h1>
       {qrCode && (
         <>
