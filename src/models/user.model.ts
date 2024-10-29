@@ -15,23 +15,11 @@ const UserSchema = new mongoose.Schema(
     twoFactorSecret: { type: String },
     twoFactorEnabled: { type: Boolean, default: false },
     imageUrl: { type: String, default: "" },
-    role: { type: String, enum: UserRole, default: "user" },
+    role: { type: String, enum: UserRole, default: UserRole.user },
   },
 
   { timestamps: true }
 );
-
-// Method to hash passwords before saving
-// UserSchema.pre("save", async function (next) {
-//   if (!this.isModified("password")) return next();
-//   this.password = await bcrypt.hash(this.password, 10);
-//   next();
-// });
-
-// Method to compare passwords
-// UserSchema.methods.comparePassword = async function (password: string) {
-//   return await bcrypt.compare(password, this.password);
-// };
 
 const User = mongoose.models.User || mongoose.model("User", UserSchema);
 

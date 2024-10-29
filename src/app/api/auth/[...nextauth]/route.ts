@@ -5,6 +5,7 @@ import connectToDB from "@/db/config";
 import User from "@/models/user.model";
 import bcryptjs from "bcryptjs";
 import { UserRole } from "@/enum/userRole";
+import { verifyEmail } from "@/utils/mailer";
 
 const authHandler = NextAuth({
   providers: [
@@ -68,6 +69,7 @@ const authHandler = NextAuth({
               twoFactorVerified: false,
               role: UserRole.user
             });
+            await verifyEmail({ email: dbUser.email, emailType: "VERIFY", userId: dbUser._id });
           }
           token.id = dbUser._id.toString();
           token.twoFactorEnabled = dbUser.twoFactorEnabled;
@@ -105,7 +107,7 @@ const authHandler = NextAuth({
         const existingUser = await User.findOne({ email: userData.email });
 
         if (!existingUser) {
-          await User.create({
+          const dbUser = await User.create({
             email: userData.email,
             name: userData.name?.replace(" ", "").toLowerCase() || userData.email?.split('@')[0] || '',
             //@ts-expect-error : should expected imageUrl
@@ -113,6 +115,7 @@ const authHandler = NextAuth({
             twoFactorEnabled: false,
             twoFactorVerified: false
           });
+          await verifyEmail({ email: dbUser.email, emailType: "VERIFY", userId: dbUser._id });
         }
 
         return true;
