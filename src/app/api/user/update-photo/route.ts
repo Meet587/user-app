@@ -2,22 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import connectToDB from "@/db/config";
 import User from "@/models/user.model";
-import multer from "multer";
-import path from "path";
 import { v2 as cloudinary } from "cloudinary";
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, path.join(process.cwd(), 'public/uploads')); // Specify the public uploads directory
-    },
-    filename: (req, file, cb) => {
-        const { id } = req.params; // Get the id from request params
-        const ext = path.extname(file.originalname); // Get the file extension
-        cb(null, `${id}${ext}`); // Rename the file using the id
-    },
-});
-
-const upload = multer({ storage });
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
