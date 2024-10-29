@@ -66,6 +66,7 @@ const LoginFormContent = () => {
         });
       } else {
         const session = await getSession();
+        console.log(session);
         if (session) {
           if (session.user.twoFactorEnabled) {
             router.push("/setup-2fa");

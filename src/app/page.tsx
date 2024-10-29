@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
+import { UserRole } from "@/enum/userRole";
 
 export default function Dashboard() {
   const { data: session, status, update } = useSession();
@@ -164,7 +165,7 @@ export default function Dashboard() {
             User ID: {session.user.id}
           </p>
 
-          {!session.user.twoFactorEnabled && (
+          {session.user.twoFactorEnabled && (
             <Button asChild className="mb-4">
               <Link href="/setup-2fa">Set up Two-Factor Authentication</Link>
             </Button>
@@ -176,18 +177,13 @@ export default function Dashboard() {
           >
             Sign out
           </Button>
-          {session.user.twoFactorEnabled && (
+          {session.user.role === UserRole.admin && (
             <Button asChild className="mb-4">
-              <Link className="font-thin" href="/setup-2fa">
-                Set up Two-Factor Authentication
+              <Link className="font-thin" href="/dashboard">
+                Go to Dashboard
               </Link>
             </Button>
           )}
-          <Button asChild className="mb-4">
-            <Link className="font-thin" href="/dashboard">
-              Go to Dashboard
-            </Link>
-          </Button>
         </CardContent>
       </Card>
     </div>
