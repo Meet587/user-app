@@ -6,8 +6,9 @@ import User from "@/models/user.model";
 import bcryptjs from "bcryptjs";
 import { UserRole } from "@/enum/userRole";
 import { verifyEmail } from "@/utils/mailer";
+import { NextAuthOptions } from "next-auth";
 
-const authHandler = NextAuth({
+export const nextAuthOption: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -36,13 +37,14 @@ const authHandler = NextAuth({
         if (!isPasswordCorrect) {
           return null;
         }
-
+        // console.log("user on credentials.", user)
         return {
           id: user._id.toString(),
           email: user.email,
           name: user.name,
           imageUrl: user.imageUrl,
           twoFactorEnabled: false,
+          twoFactorVerified: false,
           role: UserRole.user
         };
       }
@@ -52,18 +54,26 @@ const authHandler = NextAuth({
     async redirect({ url, baseUrl }) {
       return baseUrl;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, isNewUser, session }) {
+      // console.log("session in token", user, trigger, session)
+      if (trigger === "update" && session) {
+        token.twoFactorVerified = session.user.twoFactorVerified
+        // console.log("token in update", token)
+        return token
+      }
       if (user) {
         try {
           await connectToDB();
+          // console.log("user", user)
           let dbUser = await User.findOne({ email: user.email });
+          // console.log("dbUser this time", dbUser)
           if (!dbUser) {
             const salt = await bcryptjs.genSalt(10);
             const hashedPassword = await bcryptjs.hash(Math.random().toString(36).slice(-8), salt);
             dbUser = await User.create({
               email: user.email,
               name: user.name,
-              imageUrl: user.imageUrl,
+              imageUrl: user.image || token.picture,
               password: hashedPassword,
               twoFactorEnabled: false,
               twoFactorVerified: false,
@@ -73,27 +83,31 @@ const authHandler = NextAuth({
           }
           token.id = dbUser._id.toString();
           token.twoFactorEnabled = dbUser.twoFactorEnabled;
-          token.imageUrl = dbUser.imageUrl;
+          token.twoFactorVerified = dbUser.twoFactorVerified || false;
+          token.imageUrl = dbUser.imageUrl || token.picture;
           token.role = dbUser.role;
         } catch (error) {
           console.error("Error in jwt callback:", error);
         }
       }
+      // console.log("token in auptio", token)
       return token;
     },
 
-    async session({ session, token }) {
+    async session({ session, token, trigger, newSession }) {
+      // console.log("in session", session, token, trigger, newSession)
       if (session.user) {
-        await connectToDB();
-        const user = await User.findOne({ email: session.user.email });
-        if (user) {
-          session.user.id = user._id.toString();
-          session.user.imageUrl = user.imageUrl;
-          session.user.twoFactorEnabled = user.twoFactorEnabled;
-          session.user.twoFactorVerified = user.twoFactorVerified || false;
-          session.user.role = user.role;
-        }
+        session.user.id = token.id as string;
+        session.user.imageUrl = (token.imageUrl || session.user.image) as string;
+        session.user.twoFactorEnabled = token.twoFactorEnabled as boolean;
+        session.user.twoFactorVerified = token.twoFactorVerified as boolean;
+        session.user.role = token.role as UserRole;
+
+        let dbUser = await User.findOne({ email: session.user.email });
+        session.user.twoFactorEnabled = dbUser.twoFactorEnabled as boolean;
+        session.user.imageUrl = (dbUser.imageUrl || token.picture) as string;
       }
+      // console.log("sessioni in return", session, token)
       return session;
     },
     async signIn({ user, profile }) {
@@ -128,7 +142,9 @@ const authHandler = NextAuth({
   pages: {
     signIn: "/login",
   },
-});
+}
+
+const authHandler = NextAuth(nextAuthOption);
 
 export async function GET(request: Request, { params }: { params: { nextauth: string[] } }) {
   const response = await authHandler(request, { params });

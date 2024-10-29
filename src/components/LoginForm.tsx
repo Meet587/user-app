@@ -117,7 +117,7 @@ const LoginFormContent = () => {
   const handleGoogleSignIn = async (): Promise<void> => {
     setIsGoogleSignInLoading(true);
     try {
-      await signIn("google", { callbackUrl: "/" });
+      await signIn("google", { redirect: false });
     } catch (error) {
       console.log(error);
       toast({

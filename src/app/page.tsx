@@ -3,7 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,11 +13,21 @@ import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { UserRole } from "@/enum/userRole";
 
-export default function Dashboard() {
+export default function Home() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    if (
+      status === "authenticated" &&
+      session &&
+      !session.user.twoFactorVerified
+    ) {
+      router.push("/setup-2fa");
+    }
+  }, [session, router]);
 
   if (status === "loading") {
     return (
@@ -165,7 +175,7 @@ export default function Dashboard() {
             User ID: {session.user.id}
           </p>
 
-          {session.user.twoFactorEnabled && (
+          {session.user.twoFactorEnabled && !session.user.twoFactorVerified && (
             <Button asChild className="mb-4">
               <Link href="/setup-2fa">Set up Two-Factor Authentication</Link>
             </Button>

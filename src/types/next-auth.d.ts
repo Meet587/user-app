@@ -14,7 +14,7 @@ declare module "next-auth" {
     interface User {
         imageUrl?: string;
         twoFactorEnabled: boolean;
-        twoFactorVerified?: boolean;
+        twoFactorVerified: boolean;
     }
     interface Session extends DefaultSession {
         user: {
