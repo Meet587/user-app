@@ -19,10 +19,10 @@ export async function middleware(req: NextRequest) {
     // Role-based access control
     if (isAuthenticated && token.role) {
         const userRole = token.role;
-
-        if (Boolean(token?.twoFactorEnabled) && userRole !== "admin") {
-            return NextResponse.redirect(new URL('/setup-2fa', req.url));
-        }
+        // console.log("token", token)
+        // if (Boolean(token?.twoFactorEnabled) && userRole !== "admin") {
+        //     return NextResponse.redirect(new URL('/setup-2fa', req.url));
+        // }
 
         if (pathname.startsWith('/dashboard') && userRole !== 'admin') {
             if (typeof window !== 'undefined') {

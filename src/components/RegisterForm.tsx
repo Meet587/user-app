@@ -52,10 +52,7 @@ const RegisterFormContent = () => {
         return;
       }
 
-      const response = await axios.post("/api/auth/register", user);
-      toast({
-        title: response.data.message,
-      });
+      // const response = await axios.post("/api/auth/register", user);
 
       // Sign in the user after successful registration
       const result = await signIn("credentials", {
@@ -70,6 +67,9 @@ const RegisterFormContent = () => {
           description: result.error,
         });
       } else {
+        toast({
+          title: "User register.",
+        });
         router.push("/");
       }
     } catch (error: any) {
