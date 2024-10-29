@@ -23,6 +23,7 @@ export default function Home() {
     if (
       status === "authenticated" &&
       session &&
+      session.user.twoFactorEnabled &&
       !session.user.twoFactorVerified
     ) {
       router.push("/setup-2fa");

@@ -18,6 +18,7 @@ import { signIn } from "next-auth/react";
 import GoogleReCaptchaWrapper from "./GoogleReCaptchaWrapper";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { Loader2 } from "lucide-react";
+import { EMAIL_REGEX } from "@/constant/regEx";
 
 const RegisterFormContent = () => {
   const router = useRouter();
@@ -37,6 +38,13 @@ const RegisterFormContent = () => {
       return;
     }
 
+    if (!EMAIL_REGEX.test(user.email) && user.password === "") {
+      toast({
+        title: "Enter valid credentials.",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const token = await executeRecaptcha("register");
@@ -52,7 +60,7 @@ const RegisterFormContent = () => {
         return;
       }
 
-      // const response = await axios.post("/api/auth/register", user);
+      const response = await axios.post("/api/auth/register", user);
 
       // Sign in the user after successful registration
       const result = await signIn("credentials", {

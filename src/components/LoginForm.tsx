@@ -39,7 +39,12 @@ const LoginFormContent = () => {
       console.log("Execute recaptcha not yet available");
       return;
     }
-
+    if (!EMAIL_REGEX.test(user.email) && user.password === "") {
+      toast({
+        title: "Enter valid credentials.",
+      });
+      return;
+    }
     setIsLoading(true);
     try {
       const token = await executeRecaptcha("login");
